@@ -4,10 +4,20 @@ from scipy.sparse import csr
 import numpy as np
 import pandas as pd
 import numpy as np
-from sklearn.feature_extraction import DictVectorizer
-import tensorflow as tf
-from tqdm import tqdm_notebook as tqdm
+import tensorflow.compat.v1 as tf
+from tqdm import notebook  as tqdm
 
+
+
+
+"""
+这个模型的意思是
+通过用户id 和电影id,来预测用户对电影的评分;
+用户ｉｄ　和电影ｉｄ　，根据这个来预测评分；
+因为用户id 和电影id不是数值型参数 ,所以要进行oneHot 编码,变成数值无关的矩阵数据;
+ix; 是对应的onehot 编码的的key;
+这里训练的话就是加上一个参数二次项来进行预测;
+"""
 
 def vectorize_dic(dic,ix=None,p=None,n=0,g=0):
     """
@@ -23,6 +33,7 @@ def vectorize_dic(dic,ix=None,p=None,n=0,g=0):
     col_ix = np.empty(nz,dtype = int)
 
     i = 0
+
     for k,lis in dic.items():
         for t in range(len(lis)):
             ix[str(lis[t]) + str(k)] = ix.get(str(lis[t]) + str(k),0) + 1
@@ -54,9 +65,14 @@ def batcher(X_, y_=None, batch_size=-1):
             ret_y = y_[i:i + batch_size]
             yield (ret_x, ret_y)
 
+"""
+ 数据是用户对item的评分数据,这个评分数据,
+ FM是做特征组合,这个特征组合会有二阶特征组合;
+ 如果用这个数据做协同过滤
 
+"""
 cols = ['user','item','rating','timestamp']
-
+"加载数据"
 train = pd.read_csv('data/ua.base',delimiter='\t',names = cols)
 test = pd.read_csv('data/ua.test',delimiter='\t',names = cols)
 
@@ -97,6 +113,8 @@ v = tf.Variable(tf.random_normal([k,p],mean=0,stddev=0.01))
 #y_hat = tf.Variable(tf.zeros([n,1]))
 
 linear_terms = tf.add(w0,tf.reduce_sum(tf.multiply(w,x),1,keep_dims=True)) # n * 1
+
+##　这里是二次项的系数直接隐藏在分解矩阵中，所以单个二次项没有单个系数。通过这种方式我们实现了特征的二阶组合；而deep 模型实现了特征
 pair_interactions = 0.5 * tf.reduce_sum(
     tf.subtract(
         tf.pow(
@@ -149,6 +167,7 @@ with tf.Session() as sess:
 
 
 
+"这里来计算gini系数;"
 
 
 

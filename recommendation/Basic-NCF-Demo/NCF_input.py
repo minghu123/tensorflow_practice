@@ -3,7 +3,7 @@ import pandas as pd
 import tensorflow as tf
 import os
 
-DATA_DIR = 'data/ratings.dat'
+
 DATA_PATH = 'data/'
 COLUMN_NAMES = ['user','item']
 
@@ -16,8 +16,7 @@ def re_index(s):
     return s_map
 
 def load_data():
-    full_data = pd.read_csv(DATA_DIR,sep='::',header=None,names=COLUMN_NAMES,
-                            usecols=[0,1],dtype={0:np.int32,1:np.int32},engine='python')
+    full_data = pd.read_csv('ua.base', delimiter="\t", names=COLUMN_NAMES,usecols=[1,2])
 
 
     full_data.user = full_data['user'] - 1
@@ -27,7 +26,9 @@ def load_data():
     user_size = len(user_set)
     item_size = len(item_set)
 
-    item_map = re_index(item_set)
+    item_map = re_index(
+
+    )
     item_list = []
 
     full_data['item'] = full_data['item'].map(lambda x:item_map[x])

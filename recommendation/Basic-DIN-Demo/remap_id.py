@@ -4,15 +4,16 @@ import numpy as np
 
 random.seed(1234)
 
-with open('data/reviews.pkl', 'rb') as f:
+with open('D://data/tf/din/reviews.pkl', 'rb') as f:
     reviews_df = pickle.load(f)
     reviews_df = reviews_df[['reviewerID', 'asin', 'unixReviewTime']]
-with open('data/meta.pkl', 'rb') as f:
+with open('D://data/tf/din/meta.pkl', 'rb') as f:
     meta_df = pickle.load(f)
     meta_df = meta_df[['asin', 'categories']]
-    meta_df['categories'] = meta_df['categories'].map(lambda x: x[-1][-1])
+    meta_df['categories'] = meta_df['categories'].map(lambda x: x[-1][-1]) ## 这里是只取最后一个类别,实际上是有多个类别;
 
 
+## 数值化处理数据
 def build_map(df, col_name):
     key = sorted(df[col_name].unique().tolist())
     m = dict(zip(key, range(len(key))))
@@ -31,15 +32,15 @@ print('user_count: %d\titem_count: %d\tcate_count: %d\texample_count: %d' %
 
 meta_df = meta_df.sort_values('asin')
 meta_df = meta_df.reset_index(drop=True)
-reviews_df['asin'] = reviews_df['asin'].map(lambda x: asin_map[x])
+reviews_df['asin'] = reviews_df['asin'].map(lambda x: asin_map[x]) ## 将文字转换为 数字
 reviews_df = reviews_df.sort_values(['reviewerID', 'unixReviewTime'])
 reviews_df = reviews_df.reset_index(drop=True)
 reviews_df = reviews_df[['reviewerID', 'asin', 'unixReviewTime']]
-
+##　for i in range
 cate_list = [meta_df['categories'][i] for i in range(len(asin_map))]
 cate_list = np.array(cate_list, dtype=np.int32)
 
-with open('data/remap.pkl', 'wb') as f:
+with open('D://data/tf/din/remap.pkl', 'wb') as f:
     pickle.dump(reviews_df, f, pickle.HIGHEST_PROTOCOL)  # uid, iid
     pickle.dump(cate_list, f, pickle.HIGHEST_PROTOCOL)  # cid of iid line
     pickle.dump((user_count, item_count, cate_count, example_count),

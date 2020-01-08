@@ -71,6 +71,7 @@ for e in range(epoch):
     count = 0
 
     for t,date,ID,x,y in data(train,D):
+        print("")
 
 
     

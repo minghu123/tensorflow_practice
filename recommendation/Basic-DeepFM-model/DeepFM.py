@@ -71,18 +71,24 @@ class DeepFM(BaseEstimator, TransformerMixin):
             self.weights = self._initialize_weights()
 
             # model
+            ## 这里有必要么 ，这就是相当于一层神经网络吧,但对非数值型字段需要经过onehot编码才行；
+            # [self.feature_size,self.embedding_size] // 这个256*8：就是将256的维度转换维 8的维度；这里的 feat_index=
             self.embeddings = tf.nn.embedding_lookup(self.weights['feature_embeddings'],self.feat_index) # N * F * K
             feat_value = tf.reshape(self.feat_value,shape=[-1,self.field_size,1])
+            ##（Ｎ，Ｆ，Ｋ）　＊　（Ｎ，Ｆ，１）= (N,F,k)
+
             self.embeddings = tf.multiply(self.embeddings,feat_value)
 
-
             # first order term
+            ## 这个具体是这么构建的？？ feature_bias，输入的，feature_bias是和feature_size的维度是一样的，
+            ##这里的first_order 普通的线性，是没有经过 embeding之前的数据；
             self.y_first_order = tf.nn.embedding_lookup(self.weights['feature_bias'],self.feat_index)
             self.y_first_order = tf.reduce_sum(tf.multiply(self.y_first_order,feat_value),2)
             self.y_first_order = tf.nn.dropout(self.y_first_order,self.dropout_keep_fm[0])
 
             # second order term
             # sum-square-part
+            # 这里N*F* k的多维数组，在第二维上进行加和；相当于对所有的特征，在8个feature上进行加和；
             self.summed_features_emb = tf.reduce_sum(self.embeddings,1) # None * k
             self.summed_features_emb_square = tf.square(self.summed_features_emb) # None * K
 
@@ -105,6 +111,7 @@ class DeepFM(BaseEstimator, TransformerMixin):
                 self.y_deep = tf.nn.dropout(self.y_deep,self.dropout_keep_deep[i+1])
 
 
+            ## FM 模型有 y_first_order, y_second_order, 这个分别是一次项和二次项；
             #----DeepFM---------
             if self.use_fm and self.use_deep:
                 concat_input = tf.concat([self.y_first_order, self.y_second_order, self.y_deep], axis=1)
@@ -282,7 +289,9 @@ class DeepFM(BaseEstimator, TransformerMixin):
                      self.train_phase:True}
 
         loss,opt = self.sess.run([self.loss,self.optimizer],feed_dict=feed_dict)
-
+        print("========================")
+        print(self.sess.run(self.y_first_order,feed_dict=feed_dict).shape)
+        print(self.sess.run(self.y_second_order,feed_dict=feed_dict).shape)
         return loss
 
     def fit(self, Xi_train, Xv_train, y_train,

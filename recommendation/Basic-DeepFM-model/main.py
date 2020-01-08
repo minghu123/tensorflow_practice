@@ -33,6 +33,7 @@ def load_data():
 
     X_test = dfTest[cols].values
     ids_test = dfTest['id'].values
+    ## 将一个索引序列构建出一个数组
 
     cat_features_indices = [i for i,c in enumerate(cols) if c in config.CATEGORICAL_COLS]
 

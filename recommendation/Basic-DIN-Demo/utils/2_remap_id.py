@@ -4,10 +4,10 @@ import numpy as np
 
 random.seed(1234)
 
-with open('../raw_data/reviews.pkl', 'rb') as f:
+with open('D://data/tf/din/reviews.pkl', 'rb') as f:
   reviews_df = pickle.load(f)
   reviews_df = reviews_df[['reviewerID', 'asin', 'unixReviewTime']]
-with open('../raw_data/meta.pkl', 'rb') as f:
+with open('D://data/tf/din/meta.pkl', 'rb') as f:
   meta_df = pickle.load(f)
   meta_df = meta_df[['asin', 'categories']]
   meta_df['categories'] = meta_df['categories'].map(lambda x: x[-1][-1])
@@ -39,7 +39,7 @@ cate_list = [meta_df['categories'][i] for i in range(len(asin_map))]
 cate_list = np.array(cate_list, dtype=np.int32)
 
 
-with open('../raw_data/remap.pkl', 'wb') as f:
+with open('D://data/tf/din/remap.pkl', 'wb') as f:
   pickle.dump(reviews_df, f, pickle.HIGHEST_PROTOCOL) # uid, iid
   pickle.dump(cate_list, f, pickle.HIGHEST_PROTOCOL) # cid of iid line
   pickle.dump((user_count, item_count, cate_count, example_count),

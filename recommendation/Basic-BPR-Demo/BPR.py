@@ -46,7 +46,7 @@ def generate_train_batch(user_ratings,user_ratings_test,item_count,batch_size=51
         u = random.sample(user_ratings.keys(),1)[0]
         i = random.sample(user_ratings[u],1)[0]
         while i==user_ratings_test[u]:
-            i = random.sample(user_ratings[u],1)[0]
+            i = random.sample(user_ratings[u],1)[0]         ## 随机抽出的正向样本是不能再测试样本中
 
         j = random.randint(1,item_count)
         while j in user_ratings[u]:
@@ -97,6 +97,7 @@ def bpr_mf(user_count,item_count,hidden_dim):
     ])
 
     regulation_rate = 0.0001
+    ###:这里正则化很有意思, 因为我们最终最终的优化函数是 最大化正样本和负样本分数之差 , 正则化和样本最简单, 所以损失函数形成下面这样了;
     bprloss = regulation_rate * l2_norm - tf.reduce_mean(tf.log(tf.sigmoid(x)))
 
     train_op = tf.train.GradientDescentOptimizer(0.01).minimize(bprloss)
@@ -112,6 +113,7 @@ with tf.Session() as sess:
 
     for epoch in range(1,4):
         _batch_bprloss = 0
+        ## 小批量训练方法,每次输入32个样本
         for k in range(1,5000):
             uij = generate_train_batch(user_ratings,user_ratings_test,item_count)
             _bprloss,_train_op = sess.run([bprloss,train_op],

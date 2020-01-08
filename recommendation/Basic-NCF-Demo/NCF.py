@@ -116,9 +116,11 @@ class NCF(object):
 
 
         with tf.name_scope("GMF"):
+            ##　这里相乘　原先的维度相同么　，为什么能够相乘！
             self.GMF = tf.multiply(self.user_embed_GMF,self.item_embed_GMF,name='GMF')
 
         with tf.name_scope("MLP"):
+            ## 这里的interaction 是将用户矩阵和 物品矩阵进行笛卡尔乘积??
             self.interaction = tf.concat([self.user_embed_MLP, self.item_embed_MLP],
                                          axis=-1, name='interaction')
 

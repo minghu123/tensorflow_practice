@@ -2,6 +2,7 @@ import tensorflow as tf
 
 def dice(_x,axis=-1,epsilon=0.0000001,name=''):
 
+    ## 为什么这个激活函数的值不直接学习呢？
     alphas = tf.get_variable('alpha'+name,_x.get_shape()[-1],
                              initializer = tf.constant_initializer(0.0),
                              dtype=tf.float32)

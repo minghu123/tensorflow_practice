@@ -37,9 +37,11 @@ class FeatureDictionary(object):
 
         self.feat_dict = {}
         tc = 0
+
         for col in df.columns:
             if col in self.ignore_cols:
                 continue
+            ##这里判断是否为数值型的特征！！！
             if col in self.numeric_cols:
                 self.feat_dict[col] = tc
                 tc += 1
@@ -52,12 +54,15 @@ class FeatureDictionary(object):
 
         self.feat_dim = tc
 
-
+"""
+这里对数据处理貌似出现了问题，us 是对应的对应字典，
+"""
 class DataParser(object):
     def __init__(self,feat_dict):
         self.feat_dict = feat_dict
 
     def parse(self,infile=None,df=None,has_label=False):
+        ## 断言是不符合给定的条件， 然后抛出异常；
         assert not ((infile is None) and (df is None)), "infile or df at least one is set"
         assert not ((infile is not None) and (df is not None)), "only one can be set"
 
@@ -84,6 +89,7 @@ class DataParser(object):
             if col in self.feat_dict.numeric_cols:
                 dfi[col] = self.feat_dict.feat_dict[col]
             else:
+                ## 这里对应的值为对应的哪个位置的变量； 这里是非数值型变量进行位变化；
                 dfi[col] = dfi[col].map(self.feat_dict.feat_dict[col])
                 dfv[col] = 1.
 

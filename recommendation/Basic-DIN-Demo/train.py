@@ -19,7 +19,11 @@ tf.set_random_seed(1234)
 train_batch_size = 32
 test_batch_size = 512
 
-with open('dataset.pkl', 'rb') as f:
+"""
+train_set 的数据格式(id,his,itemid ,label) : his是一个list 列表;
+
+"""
+with open('D://data/tf/din/dataset.pkl', 'rb') as f:
     train_set = pickle.load(f)
     test_set = pickle.load(f)
     cate_list = pickle.load(f)
@@ -82,7 +86,7 @@ def _eval(sess,model):
     global best_auc
     if best_auc < test_gauc:
         best_auc = test_gauc
-        model.save(sess, 'save_path/ckpt')
+        model.save(sess, 'D://data/tf/din/ckpt')
     return test_gauc, Auc
 
 

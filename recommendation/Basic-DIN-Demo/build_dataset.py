@@ -3,7 +3,7 @@ import pickle
 
 random.seed(1234)
 
-with open('data/remap.pkl', 'rb') as f:
+with open('D://data/tf/din/remap.pkl', 'rb') as f:
   reviews_df = pickle.load(f)
   cate_list = pickle.load(f)
   user_count, item_count, cate_count, example_count = pickle.load(f)
@@ -11,14 +11,16 @@ with open('data/remap.pkl', 'rb') as f:
 train_set = []
 test_set = []
 for reviewerID, hist in reviews_df.groupby('reviewerID'):
-  pos_list = hist['asin'].tolist()
+  pos_list = hist['asin'].tolist() ## 用户的历史购买记录;
   def gen_neg():
     neg = pos_list[0]
     while neg in pos_list:
       neg = random.randint(0, item_count-1)
     return neg
-  neg_list = [gen_neg() for i in range(len(pos_list))]
+  neg_list = [gen_neg() for i in range(len(pos_list))] ##　对每个历史记录生成一个neg 样本 ，这个样本没有数据；
 
+  ## 这里又是不存在的数据不够买， 这个负样本的选择策略又是有问题；
+  ##　把用户的最后一个样本当做是测试样本
   for i in range(1, len(pos_list)):
     hist = pos_list[:i]
     if i != len(pos_list) - 1:
@@ -34,7 +36,7 @@ random.shuffle(test_set)
 assert len(test_set) == user_count
 # assert(len(test_set) + len(train_set) // 2 == reviews_df.shape[0])
 
-with open('dataset.pkl', 'wb') as f:
+with open('D://data/tf/din/dataset.pkl', 'wb') as f:
   pickle.dump(train_set, f, pickle.HIGHEST_PROTOCOL)
   pickle.dump(test_set, f, pickle.HIGHEST_PROTOCOL)
   pickle.dump(cate_list, f, pickle.HIGHEST_PROTOCOL)

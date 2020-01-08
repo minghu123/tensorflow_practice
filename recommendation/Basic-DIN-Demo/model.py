@@ -4,6 +4,10 @@ from Dice import dice
 
 
 class Model(object):
+    """
+     这里类别和 itemid 分别 embeding ,然后concat 之后作为下一步结果的输出;
+
+    """
     def __init__(self,user_count,item_count,cate_count,cate_list):
 
         # self.u = tf.placeholder(tf.int32,[None,],name='user')
@@ -26,12 +30,12 @@ class Model(object):
 
         # u_emb = tf.nn.embedding_lookup(user_emb_w,self.u)
 
-        # ic是item到category的转换
+        # ic是item到category的转换 cate_list的下标是对应的 item的id
         self.ic = tf.gather(cate_list,self.i)
         i_emb = tf.concat(values=[
             tf.nn.embedding_lookup(item_emb_w,self.i),
             tf.nn.embedding_lookup(cate_emb_w,self.ic)
-        ],axis=1)
+        ],axis=1) ## 将item 的embeding 和 cate 的embeding 结合起来;
 
         i_b = tf.gather(item_b,self.i)
 
@@ -46,9 +50,9 @@ class Model(object):
         h_emb = tf.concat([
             tf.nn.embedding_lookup(item_emb_w, self.hist_i),
             tf.nn.embedding_lookup(cate_emb_w, self.hc),
-        ], axis=2)
+        ], axis=2) ## 这里是用户的历史记录, 这个历史记录
 
-        hist = attention(i_emb,h_emb,self.sl)
+        hist = attention(i_emb,h_emb,self.sl) # B * 1 * H  形成的是每一个历史记录对item的权重
 
         hist = tf.layers.batch_normalization(inputs=hist)
         hist = tf.reshape(hist,[-1,hidden_units])
@@ -78,7 +82,7 @@ class Model(object):
         d_layer_3_j = tf.reshape(d_layer_3_j, [-1])
 
         x = i_b - j_b + d_layer_3_i - d_layer_3_j  # [B]
-        self.logits = i_b + d_layer_3_i
+        self.logits = i_b + d_layer_3_i ##　这里为什么　要用ｉ＿ｂ　来加一个东西！　这是截距　，也就是每个　item 有一个截距;
 
 
         # logits for all item:
@@ -131,11 +135,11 @@ class Model(object):
 
     def train(self,sess,uij,l):
         loss,_ = sess.run([self.loss,self.train_op],feed_dict={
-            #self.u : uij[0],
+            #self.u : uij[0], ##　这里是根据历史记录来进行推荐，所以这里不需要知道当前为哪个用户
             self.i : uij[1],
             self.y : uij[2],
-            self.hist_i : uij[3],
-            self.sl : uij[4],
+            self.hist_i : uij[3], ## hist_i: 是历史记录 ,是以这批记录中最长的历史记录做的矩阵 N * T (T 是用户的最长的历史记录;不足的位置补0 )
+            self.sl : uij[4],## 每个用户最近的历史记录的长度
             self.lr : l
         })
 
@@ -182,12 +186,15 @@ def attention(queries,keys,keys_length):
     '''
 
     queries_hidden_units = queries.get_shape().as_list()[-1]
-    queries = tf.tile(queries,[1,tf.shape(keys)[1]])
-    queries = tf.reshape(queries,[-1,tf.shape(keys)[1],queries_hidden_units])
+    queries = tf.tile(queries,[1,tf.shape(keys)[1]]) ## 这里的tile 形成的还是一个2维的矩阵
+    queries = tf.reshape(queries,[-1,tf.shape(keys)[1],queries_hidden_units]) ##　将２维的矩阵转换维３维的矩阵；
 
     din_all = tf.concat([queries,keys,queries-keys,queries * keys],axis=-1) # B*T*4H
-    # 三层全链接
+    # 三层全链接,这里用三层全连接来学习权重,就是每个数据对推荐数据的权重;
+
+    ## 使用三层全连接来处理数据, 历史数据是 B T H , B 是批量的维度, T 是历史数据的维度, H 是embeidng 向量的维度
     d_layer_1_all = tf.layers.dense(din_all, 80, activation=tf.nn.sigmoid, name='f1_att')
+    ## 第一层矩阵是乘以一个 4H *80的矩阵, T*4H *4H*80 => B * T * 80 的矩阵, 原来的权重经过80中权重组合, 这80中权重组合 再相互组合 形成40种权重组合
     d_layer_2_all = tf.layers.dense(d_layer_1_all, 40, activation=tf.nn.sigmoid, name='f2_att')
     d_layer_3_all = tf.layers.dense(d_layer_2_all, 1, activation=None, name='f3_att') #B*T*1
 
